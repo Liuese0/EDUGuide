@@ -11,6 +11,7 @@ const EducationalGuidanceTool = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   
+  
   // 학생 특성 분석을 위한 질문들
 
   let scores = {
@@ -1205,9 +1206,30 @@ const EducationalGuidanceTool = () => {
     },
     
     // 성격과 학습 스타일에 따른 점수 계산
+    // calculateScoresByPersonality 함수 수정
     calculateScoresByPersonality: function(answers, scores) {
-      // 성격 유형에 따른 점수 조정
+      // 함수의 입력값 유효성 검사
+      if (!answers) {
+        console.warn("answers가 정의되지 않았습니다");
+        return scores;
+      }
+      
+      // 'engineering' 속성이 없는 경우 처리
+      const hasEngineeringProperty = scores.hasOwnProperty('engineering');
+      if (!hasEngineeringProperty) {
+        // 로그 출력
+        console.warn("scores 객체에 'engineering' 속성이 없습니다. 관련 공학 전공으로 점수를 분배합니다.");
+      }
+
+      // 'journalism' 속성이 없는 경우 처리
+      const hasJournalismProperty = scores.hasOwnProperty('journalism');
+      if (!hasJournalismProperty) {
+        console.warn("scores 객체에 'journalism' 속성이 없습니다.");
+      }
+      
+      // personalityType 속성 확인 및 처리
       if (answers.personalityType) {
+        // 배열 또는 단일 값으로 처리
         const types = Array.isArray(answers.personalityType) ? answers.personalityType : [answers.personalityType];
         
         types.forEach(type => {
@@ -1216,7 +1238,15 @@ const EducationalGuidanceTool = () => {
               scores.math.score += 6;
               scores.physics.score += 6;
               scores.chemistry.score += 6;
-              scores.engineering.score += 4;
+              
+              // 'engineering' 속성 안전 확인
+              if (hasEngineeringProperty) {
+                scores.engineering.score += 4;
+              } else {
+                // 대체: 관련 공학 전공에 점수 분배
+                scores.electrical.score += 2;
+                scores.mechanical.score += 2;
+              }
               scores.medicine.score += 4;
               break;
             case 'creative':
@@ -1227,7 +1257,14 @@ const EducationalGuidanceTool = () => {
               scores.koreanLiterature.score += 6;
               break;
             case 'practical':
-              scores.engineering.score += 6;
+              // 'engineering' 속성 안전 확인
+              if (hasEngineeringProperty) {
+                scores.engineering.score += 6;
+              } else {
+                // 대체: 관련 공학 전공에 점수 분배
+                scores.electrical.score += 3;
+                scores.mechanical.score += 3;
+              }
               scores.nursing.score += 6;
               scores.agriculture.score += 6;
               scores.business.score += 4;
@@ -1247,10 +1284,24 @@ const EducationalGuidanceTool = () => {
               break;
             case 'organized':
               scores.business.score += 6;
-              scores.engineering.score += 6;
+              // 'engineering' 속성 안전 확인
+              if (hasEngineeringProperty) {
+                scores.engineering.score += 6;
+              } else {
+                // 대체: 관련 공학 전공에 점수 분배
+                scores.electrical.score += 3;
+                scores.mechanical.score += 3;
+              }
               scores.medicine.score += 4;
               scores.pharmacy.score += 4;
               scores.law.score += 4;
+              break;
+            default:
+              // 기본 케이스 추가: 알려지지 않은 성격 유형
+              console.warn("알 수 없는 성격 유형:", type);
+              // 기본적으로 여러 분야에 골고루 낮은 점수 부여
+              scores.business.score += 2;
+              scores.education.score += 2;
               break;
           }
         });
@@ -1271,9 +1322,20 @@ const EducationalGuidanceTool = () => {
             break;
           case 'practicalLearning':
             scores.fineArts.score += 6;
-            scores.engineering.score += 6;
+            // 'engineering' 속성 안전 확인
+            if (hasEngineeringProperty) {
+              scores.engineering.score += 6;
+            } else {
+              // 대체: 관련 공학 전공에 점수 분배
+              scores.electrical.score += 3;
+              scores.mechanical.score += 3;
+            }
             scores.physical.score += 6;
             scores.medicine.score += 4;
+            break;
+          default:
+            // 기본 케이스 추가
+            console.warn("알 수 없는 학습 스타일:", answers.studyHabits);
             break;
         }
       }
@@ -1293,7 +1355,14 @@ const EducationalGuidanceTool = () => {
             break;
           case 'specialist':
             scores.medicine.score += 6;
-            scores.engineering.score += 6;
+            // 'engineering' 속성 안전 확인
+            if (hasEngineeringProperty) {
+              scores.engineering.score += 6;
+            } else {
+              // 대체: 관련 공학 전공에 점수 분배
+              scores.electrical.score += 3;
+              scores.mechanical.score += 3;
+            }
             scores.computerScience.score += 6;
             break;
           case 'mediator':
@@ -1306,6 +1375,10 @@ const EducationalGuidanceTool = () => {
             scores.fineArts.score += 4;
             scores.koreanLiterature.score += 4;
             scores.math.score += 4;
+            break;
+          default:
+            // 기본 케이스 추가
+            console.warn("알 수 없는 리더십 스타일:", answers.leadershipStyle);
             break;
         }
       }
@@ -1325,7 +1398,14 @@ const EducationalGuidanceTool = () => {
             case 'calculation':
               scores.math.score -= 4;
               scores.physics.score -= 4;
-              scores.engineering.score -= 2;
+              // 'engineering' 속성 안전 확인
+              if (hasEngineeringProperty) {
+                scores.engineering.score -= 2;
+              } else {
+                // 대체: 관련 공학 전공에 점수 감소
+                scores.electrical.score -= 1;
+                scores.mechanical.score -= 1;
+              }
               scores.chemistry.score -= 2;
               break;
             case 'reading':
@@ -1336,9 +1416,16 @@ const EducationalGuidanceTool = () => {
               break;
             case 'writing':
               scores.koreanLiterature.score -= 4;
-              scores.journalism.score -= 4;
+              // 'journalism' 속성 안전 확인
+              if (hasJournalismProperty) {
+                scores.journalism.score -= 4;
+              }
               scores.law.score -= 2;
               scores.education.score -= 2;
+              break;
+            default:
+              // 기본 케이스 추가
+              console.warn("알 수 없는 학습 어려움:", difficulty);
               break;
           }
         });
@@ -1956,7 +2043,7 @@ const renderQuestionStep = () => {
 const renderStartScreen = () => {
   return (
     <div className="start-screen">
-      <h1 className="app-title">고등학생 진로 탐색 가이드</h1>
+      <h1 className="app-title">EDU_Guide : 고등학생 진로 탐색 가이드</h1>
       <p className="app-description">
         학업 성취도, 관심 분야, 학교 활동 등을 바탕으로 
         개인화된 진로 추천과 대학 전공 가이드를 제공합니다.
